@@ -14,7 +14,29 @@ exports.handler = async (event) => {
     console.log('Payload recebido:', event.body);
     console.log('Cabeçalhos recebidos:', event.headers);
 
-    const data = JSON.parse(event.body);
+    let payload = event.body;
+
+    // Tente converter para string se for um buffer
+    if (typeof payload !== 'string') {
+      payload = payload.toString();
+    }
+
+    // Tente decodificar explicitamente usando UTF-8
+    payload = Buffer.from(payload, 'binary').toString('utf8');
+
+    // Remova espaços em branco e caracteres de controle
+    payload = payload.trim();
+
+    // Verifique se o payload não está vazio
+    if (!payload) {
+      console.error('Payload vazio ou nulo');
+      return {
+        statusCode: 400,
+        body: JSON.stringify({ error: 'Payload vazio ou nulo' }),
+      };
+    }
+
+    const data = JSON.parse(payload);
     console.log('Dados do payload:', data);
 
     const message = data.messages[0];
