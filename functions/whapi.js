@@ -1,70 +1,65 @@
 const admin = require('firebase-admin');
 const axios = require('axios');
 
-// Inicializar o Firebase Admin SDK
+// Inicialize o Firebase Admin SDK com suas credenciais
 const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
-  databaseURL: process.env.FIREBASE_DATABASE_URL
+  databaseURL: process.env.FIREBASE_DATABASE_URL,
 });
-const db = admin.database();
 
-// Função principal
-exports.handler = async (event, context) => {
+exports.handler = async (event) => {
   try {
-    const mensagem = JSON.parse(event.body);
-    const usuario = mensagem.from;
-    const texto = mensagem.text.body.toUpperCase();
+    console.log('Tipo do Payload:', typeof event.body);
+    console.log('Payload recebido:', event.body);
+    console.log('Cabeçalhos recebidos:', event.headers);
 
-    // Lógica de saudação e verificação de cadastro
-    const respostaInicial = await tratarMensagemInicial(usuario, texto);
-    if (respostaInicial) {
-      return { statusCode: 200, body: JSON.stringify({ message: respostaInicial }) };
+    const data = JSON.parse(event.body);
+    console.log('Dados do payload:', data);
+
+    const message = data.messages[0];
+    const text = message.text.body;
+    const chatId = message.chat_id;
+
+    if (text === 'pontoeletronico') {
+      const response = await axios.post(
+        process.env.WHAPI_URL + '/messages',
+        {
+          messages: [
+            {
+              to: chatId,
+              type: 'text',
+              text: {
+                body: 'Horário registrado com sucesso!',
+              },
+            },
+          ],
+        },
+        {
+          headers: {
+            Authorization: 'Bearer ' + process.env.WHAPI_TOKEN,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      console.log('Resposta do Whapi:', response.data);
+
+      return {
+        statusCode: 200,
+        body: JSON.stringify({ message: 'Função executada com sucesso' }),
+      };
+    } else {
+      return {
+        statusCode: 200,
+        body: JSON.stringify({ message: 'Mensagem não processada' }),
+      };
     }
-
-    // Lógica do menu principal e opções
-    const respostaMenu = await tratarOpcoesMenu(usuario, texto);
-    return { statusCode: 200, body: JSON.stringify({ message: respostaMenu }) };
-
   } catch (error) {
     console.error('Erro:', error);
-    return { statusCode: 500, body: JSON.stringify({ error: 'Erro interno do servidor' }) };
+    return {
+      statusCode: 500,
+      body: JSON.stringify({ error: 'Erro ao processar a requisição' }),
+    };
   }
 };
-
-// Funções auxiliares (a serem implementadas)
-async function tratarMensagemInicial(usuario, texto) {
-  // Lógica de saudação, verificação de cadastro e menu principal
-}
-
-async function tratarOpcoesMenu(usuario, texto) {
-  // Lógica para tratar as opções do menu (Entrada, Saída Refeição, etc.)
-}
-
-async function enviarMensagemWhapi(usuario, mensagem) {
-  // Lógica para enviar mensagens usando a API do Whapi
-}
-
-async function verificarCadastro(usuario) {
-  // Lógica para verificar se o usuário está cadastrado no Firebase
-}
-
-async function verificarColaborador(usuario) {
-  // Lógica para verificar se o usuário é um colaborador no Firebase
-}
-
-async function registrarPonto(usuario, re, tipo, justificativa) {
-    // Lógica para registrar o ponto no Firebase
-}
-
-async function validarRE(re) {
-    // Lógica para validar o RE no Firebase
-}
-
-async function validarPermissao(usuario, re) {
-    // Lógica para validar a permissão do usuário no Firebase
-}
-
-async function validarHorarioSaida(re) {
-    // Lógica para validar o horário de saída no Firebase
-}
