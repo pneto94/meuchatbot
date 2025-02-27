@@ -14,7 +14,7 @@ exports.handler = async (event) => {
     console.log('Payload recebido:', event.body);
     console.log('Cabeçalhos recebidos:', event.headers);
 
-    let payload = event.body;
+    let payload = event.rawBody; // Tente usar event.rawBody
 
     // Tente converter para string se for um buffer
     if (typeof payload !== 'string') {
