@@ -10,11 +10,11 @@ admin.initializeApp({
 
 exports.handler = async (event) => {
   try {
-    console.log('Tipo do Payload:', typeof event.body);
-    console.log('Payload recebido:', event.body);
+    console.log('Tipo do Payload:', typeof event.rawBody);
+    console.log('Payload recebido:', event.rawBody);
     console.log('Cabeçalhos recebidos:', event.headers);
 
-    let payload = event.rawBody; // Tente usar event.rawBody
+    let payload = event.rawBody;
 
     // Tente converter para string se for um buffer
     if (typeof payload !== 'string') {
@@ -39,42 +39,50 @@ exports.handler = async (event) => {
     const data = JSON.parse(payload);
     console.log('Dados do payload:', data);
 
-    const message = data.messages[0];
-    const text = message.text.body;
-    const chatId = message.chat_id;
+    if (data && data.messages && data.messages.length > 0) {
+      const message = data.messages[0];
+      const text = message.text.body;
+      const chatId = message.chat_id;
 
-    if (text === 'pontoeletronico') {
-      const response = await axios.post(
-        process.env.WHAPI_URL + '/messages',
-        {
-          messages: [
-            {
-              to: chatId,
-              type: 'text',
-              text: {
-                body: 'Horário registrado com sucesso!',
+      if (text === 'pontoeletronico') {
+        const response = await axios.post(
+          process.env.WHAPI_URL + '/messages',
+          {
+            messages: [
+              {
+                to: chatId,
+                type: 'text',
+                text: {
+                  body: 'Horário registrado com sucesso!',
+                },
               },
-            },
-          ],
-        },
-        {
-          headers: {
-            Authorization: 'Bearer ' + process.env.WHAPI_TOKEN,
-            'Content-Type': 'application/json',
+            ],
           },
-        }
-      );
+          {
+            headers: {
+              Authorization: 'Bearer ' + process.env.WHAPI_TOKEN,
+              'Content-Type': 'application/json',
+            },
+          }
+        );
 
-      console.log('Resposta do Whapi:', response.data);
+        console.log('Resposta do Whapi:', response.data);
 
-      return {
-        statusCode: 200,
-        body: JSON.stringify({ message: 'Função executada com sucesso' }),
-      };
+        return {
+          statusCode: 200,
+          body: JSON.stringify({ message: 'Função executada com sucesso' }),
+        };
+      } else {
+        return {
+          statusCode: 200,
+          body: JSON.stringify({ message: 'Mensagem não processada' }),
+        };
+      }
     } else {
+      console.error('Payload sem mensagens');
       return {
-        statusCode: 200,
-        body: JSON.stringify({ message: 'Mensagem não processada' }),
+        statusCode: 400,
+        body: JSON.stringify({ error: 'Payload sem mensagens' }),
       };
     }
   } catch (error) {
