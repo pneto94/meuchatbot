@@ -10,8 +10,8 @@ admin.initializeApp({
 
 exports.handler = async (event) => {
   try {
-    console.log('Tipo do Payload:', typeof event.rawBody);
-    console.log('Payload recebido:', event.rawBody);
+    console.log('Tipo do Payload (rawBody):', typeof event.rawBody);
+    console.log('Payload recebido (rawBody):', event.rawBody);
     console.log('Cabeçalhos recebidos:', event.headers);
 
     let payload = event.rawBody;
